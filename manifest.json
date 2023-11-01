@@ -1,0 +1,12 @@
+{
+	"manifest_version": 3,
+	"name": "Linked In Job Parser",
+	"version": "1.0",
+	"description": "A simple Chrome extension",
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["./dist/bundle.js"]
+		}
+	]
+}
