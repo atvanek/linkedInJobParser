@@ -1,3 +1,4 @@
 export default function cleanString(string: string): string {
-	return string.toLowerCase().trim();
+	const cleanedString = string.trim().toLowerCase();
+	return cleanedString;
 }

@@ -1,59 +1,34 @@
-import currencyRegex from './utils/currencyRegex';
-import cleanString from './utils/cleanString';
-import locationTypes from './utils/locationTypes';
-import JobData from './utils/JobData';
+import queryJobData from './utils/queryJobData';
+import withRetry from './utils/withRetry';
 
 addEventListener('load', () => {
-	const jobTitle =
-		document.querySelector('.job-details-jobs-unified-top-card__job-title')
-			?.textContent || null;
-
-	const jobDescriptors = document.querySelector(
-		'.job-details-jobs-unified-top-card__primary-description > div'
+	let currentJobId = new URLSearchParams(window.location.search).get(
+		'currentJobId'
 	);
 
-	console.log(jobDescriptors);
-
-	const companyNode = jobDescriptors?.querySelector('a');
-	const companyText = companyNode?.textContent;
-
-	const jobLocation =
-		companyNode?.nextSibling?.nextSibling?.textContent
-			?.replace('·', '')
-			.trim() || null;
-
-	const jobInsights = Array.from(
-		document.querySelectorAll(
-			'.job-details-jobs-unified-top-card__job-insight > span > span'
-		)
+	const jobDetailsContainer = document.querySelector(
+		'.jobs-search__job-details--container'
 	);
 
-	console.log(jobInsights);
+	const observer = new MutationObserver(function (mutations) {
+		handleMutation(
+			new URLSearchParams(window.location.search).get('currentJobId')
+		);
+	});
 
-	const compensation =
-		jobInsights
-			.find((node) => node.textContent?.match(currencyRegex))
-			?.textContent?.trim() || null;
+	const config = {
+		childList: true,
+		subtree: true,
+	};
 
-	const jobLocationTypes = jobInsights.filter(
-		(node) =>
-			node instanceof HTMLElement &&
-			locationTypes.includes(cleanString(node.innerText))
-	) as HTMLElement[];
+	observer.observe(jobDetailsContainer, config);
 
-	const jobLocationTypesCleaned = jobLocationTypes.map((el) =>
-		cleanString(el.innerText)
-	);
+	function handleMutation(newJobId: string) {
+		if (currentJobId !== newJobId) {
+			currentJobId = newJobId;
+			withRetry(queryJobData);
+		}
+	}
 
-	console.log(jobLocationTypesCleaned);
-
-	const jobData = new JobData(
-		jobTitle,
-		companyText,
-		jobLocation,
-		jobLocationTypesCleaned,
-		compensation
-	);
-
-	console.log(jobData.toString());
+	withRetry(queryJobData);
 });
